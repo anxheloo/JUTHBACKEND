@@ -3,6 +3,11 @@ const User = require("../models/User");
 const CryptoJS = require("crypto-js");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
+const sgMail = require("@sendgrid/mail");
+require("dotenv").config();
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+// console.log(process.env.SENDGRID_API_KEY);
+// sgMail.setApiKey("Bearer " + process.env.SENDGRID_API_KEY);
 
 module.exports = {
   createUser: async (req, res) => {
@@ -36,6 +41,7 @@ module.exports = {
     }
   },
 
+  /*
   loginUser: async (req, res) => {
     try {
       const user = await User.findOne({ phonenumber: req.body.phonenumber });
@@ -94,6 +100,8 @@ Anxhelo Cenollari
 Email: nixhinixhi1@gmail.com`,
       };
 
+      console.log("THIS IS USER EMAIL:   ", user.email);
+
       transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
           console.log("Error sending email:", error);
@@ -114,13 +122,68 @@ Email: nixhinixhi1@gmail.com`,
     }
   },
 
+  */
+
+  loginUser: async (req, res) => {
+    try {
+      const user = await User.findOne({ phonenumber: req.body.phonenumber });
+      // console.log(user);
+
+      if (!user) {
+        return res
+          .status(401)
+          .json("Wrong credentials, provide a valid phone number");
+      }
+
+      // Generate a random 6-digit verification code
+      const verificationCode = Math.floor(100000 + Math.random() * 900000);
+
+      // Store the verification code for the user
+      user.verificationCode = verificationCode;
+      await user.save();
+
+      // Send the verification code via email
+      const msg = {
+        // to: "anxhelocenollari@gmail.com",
+        to: user.email,
+        from: "anxhelocenollari@gmail.com", // Replace with your verified sender email
+        subject: "Email Verification Code",
+        text: `Hello,
+
+        Your verification code is: ${verificationCode}
+
+        Best regards,
+        Anxhelo Cenollari
+        Email: anxhelocenollari@gmail.com`,
+      };
+
+      console.log("THIS IS USER EMAIL:   ", user.email);
+
+      const { password, __v, createdAt, updatedAt, ...userData } = user._doc;
+
+      await sgMail.send(msg);
+      console.log("Email sent");
+      res.status(200).json({ userData, message: "Verification code sent" });
+    } catch (error) {
+      console.error("Error sending email:", error);
+      // res.status(500).json({ message: "Failed to send email" });
+      if (error.response) {
+        console.error(error.response.body);
+      }
+    }
+  },
+
   verifyEmail: async (req, res) => {
     try {
       const { phonenumber, verificationCode } = req.body;
 
-      // Find the user by phone number
-      const user = await User.findOne({ phonenumber });
+      console.log(phonenumber, verificationCode);
 
+      // Find the user by phone number
+      const user = await User.findOne({
+        phonenumber,
+      });
+      console.log(phonenumber);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -134,10 +197,14 @@ Email: nixhinixhi1@gmail.com`,
       user.isEmailVerified = true;
       await user.save();
 
-      res.status(200).json({ message: "Email verification successful" });
+      const { password, __v, createdAt, updatedAt, ...userData } = user._doc;
+
+      return res
+        .status(200)
+        .json({ userData, message: "Email verification successful" });
     } catch (error) {
       console.error("Error verifying email: ", error);
-      res.status(500).json({ message: "Failed to verify email" });
+      return res.status(500).json({ message: "Failed to verify email" });
     }
   },
 };
