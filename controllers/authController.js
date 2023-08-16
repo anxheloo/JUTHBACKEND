@@ -6,8 +6,6 @@ const nodemailer = require("nodemailer");
 const sgMail = require("@sendgrid/mail");
 require("dotenv").config();
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-// console.log(process.env.SENDGRID_API_KEY);
-// sgMail.setApiKey("Bearer " + process.env.SENDGRID_API_KEY);
 
 module.exports = {
   createUser: async (req, res) => {
@@ -135,6 +133,19 @@ Email: nixhinixhi1@gmail.com`,
           .json("Wrong credentials, provide a valid phone number");
       }
 
+      /*
+            const decryptedPassword = CryptoJS.AES.decrypt(
+              user.password,
+              process.env.SECRET
+            );
+            const decryptedpass = decryptedPassword.toString(CryptoJS.enc.Utf8);
+
+            if (decryptedpass !== req.body.password) {
+              return res.status(401).json("Wrong password");
+            }
+
+            */
+
       // Generate a random 6-digit verification code
       const verificationCode = Math.floor(100000 + Math.random() * 900000);
 
@@ -158,6 +169,16 @@ Email: nixhinixhi1@gmail.com`,
       };
 
       console.log("THIS IS USER EMAIL:   ", user.email);
+
+      /*
+            const userToken = jwt.sign(
+              {
+                id: user.id,
+              },
+              process.env.JWT_SEC,
+              { expiresIn: "7d" }
+            );
+*/
 
       const { password, __v, createdAt, updatedAt, ...userData } = user._doc;
 
