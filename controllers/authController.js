@@ -7,6 +7,21 @@ const sgMail = require("@sendgrid/mail");
 require("dotenv").config();
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
+//function to create token based on the user Id
+const createToken = (userId) => {
+  const payload = {
+    userId: userId,
+  };
+
+  // Read the secret key from the environment variable
+  const secretKey = process.env.JWT_SECRET;
+
+  // Generate the token with the secret key and expiration time
+  const token = jwt.sign(payload, secretKey, { expiresIn: "1h" });
+
+  return token;
+};
+
 module.exports = {
   createUser: async (req, res) => {
     try {
@@ -176,7 +191,7 @@ Email: nixhinixhi1@gmail.com`,
                 id: user.id,
               },
               process.env.JWT_SEC,
-              { expiresIn: "7d" }
+              { expiresIn: "1d" }
             );
 */
 
@@ -220,9 +235,15 @@ Email: nixhinixhi1@gmail.com`,
 
       const { password, __v, createdAt, updatedAt, ...userData } = user._doc;
 
-      return res
-        .status(200)
-        .json({ userData, message: "Email verification successful" });
+      const token = createToken(user._id);
+
+      console.log("THIS IS TOKEN:", token);
+
+      return res.status(200).json({
+        userData,
+        message: "Email verification successful",
+        token: token,
+      });
     } catch (error) {
       console.error("Error verifying email: ", error);
       return res.status(500).json({ message: "Failed to verify email" });
