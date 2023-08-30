@@ -17,7 +17,7 @@ const createToken = (userId) => {
   const secretKey = process.env.JWT_SECRET;
 
   // Generate the token with the secret key and expiration time
-  const token = jwt.sign(payload, secretKey, { expiresIn: "1h" });
+  const token = jwt.sign(payload, secretKey, { expiresIn: 10 });
 
   return token;
 };
@@ -239,10 +239,25 @@ Email: nixhinixhi1@gmail.com`,
 
       console.log("THIS IS TOKEN:", token);
 
+      // // Get the Unix timestamp from your decoded JWT token
+      // const unixTimestamp = jwt.decode(token).exp;
+
+      // // Create a new Date object by multiplying the Unix timestamp by 1000
+      // // to convert it from seconds to milliseconds
+      // const expirationDate = new Date(unixTimestamp * 1000);
+
+      // // Now, you can format the date in a human-readable format
+      // const formattedDate = expirationDate.toLocaleString();
+
+      // console.log("Human-Readable Expiration Date:", formattedDate);
+
+      // const unixTimestamp = jwt.decode(token).exp;
+
       return res.status(200).json({
         userData,
         message: "Email verification successful",
         token: token,
+        secret: process.env.JWT_SECRET,
       });
     } catch (error) {
       console.error("Error verifying email: ", error);
