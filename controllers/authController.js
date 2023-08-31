@@ -17,7 +17,7 @@ const createToken = (userId) => {
   const secretKey = process.env.JWT_SECRET;
 
   // Generate the token with the secret key and expiration time
-  const token = jwt.sign(payload, secretKey, { expiresIn: 10 });
+  const token = jwt.sign(payload, secretKey, { expiresIn: 300 });
 
   return token;
 };
